@@ -1,0 +1,2 @@
+greeclimate==4.3.2
+aiohttp==3.14.5

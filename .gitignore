@@ -1,0 +1,13 @@
+# Live data: passcode hash, sign-in secret, Siri key, AC address, activity log, history and logs.
+# It stays on the Mac mini and must never be uploaded.
+data/
+
+# Python environment and caches (install.sh rebuilds them)
+.venv/
+__pycache__/
+*.pyc
+
+# macOS and temp files
+.DS_Store
+*.log
+*.tmp

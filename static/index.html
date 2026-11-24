@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>AC Remote</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AC Remote">
+<meta name="theme-color" content="#0b1220">
+<link rel="apple-touch-icon" href="/static/icon-180.png">
+<link rel="manifest" href="/static/manifest.json">
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--ink:#111827;--mute:#6b7280;--line:#e5e7eb;--acc:#2563eb;--cool:#0ea5e9;--heat:#f97316;--dry:#8b5cf6;--fan:#10b981;--auto:#6366f1;--bad:#dc2626;--chip:#eef2f7}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#131c2e;--ink:#e5e7eb;--mute:#94a3b8;--line:#22304a;--chip:#1c2740}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+body{padding:env(safe-area-inset-top) 0 calc(76px + env(safe-area-inset-bottom))}
+main{max-width:560px;margin:0 auto;padding:12px 16px}
+h1{font-size:22px;margin:8px 0 2px}h2{font-size:15px;margin:20px 4px 8px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.wrap{flex-wrap:wrap}
+.mute{color:var(--mute);font-size:14px}.small{font-size:13px}
+button{font:inherit;border:0;border-radius:12px;padding:10px 14px;background:var(--chip);color:var(--ink);cursor:pointer}
+button.pri{background:var(--acc);color:#fff}button.danger{color:var(--bad)}
+button:active{transform:scale(.97)}button:disabled{opacity:.4}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:8px}
+.fanbox{padding:18px 16px 14px}
+#fanSlider{-webkit-appearance:none;appearance:none;width:100%;height:28px;margin:0;background:transparent;--p:0%}
+#fanSlider::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(to right,var(--acc) var(--p),var(--line) var(--p))}
+#fanSlider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;margin-top:-10px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+#fanSlider::-moz-range-track{height:8px;border-radius:4px;background:linear-gradient(to right,var(--acc) var(--p),var(--line) var(--p))}
+#fanSlider::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+#fanSlider.auto{opacity:.45}
+.fanlbls{position:relative;height:30px;margin:2px 0 8px;font-size:12px;color:var(--mute)}
+.fanlbls span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;padding:6px 2px;cursor:pointer}
+.fanlbls span.on{color:var(--ink);font-weight:600}
+.fanbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chip{padding:10px 6px;text-align:center;font-size:14px;border-radius:12px;background:var(--chip)}
+.chip.on{background:var(--acc);color:#fff}
+.chip .ic{font-size:20px;display:block}
+.status{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute)}
+.dot{width:8px;height:8px;border-radius:50%;background:#9ca3af}.dot.ok{background:#22c55e}.dot.bad{background:var(--bad)}
+.banner{background:#fef3c7;color:#92400e;border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+@media (prefers-color-scheme:dark){.banner{background:#422006;color:#fde68a}}
+.dial{position:relative;width:240px;height:240px;margin:6px auto 0}
+.dial svg{width:100%;height:100%}
+.dial .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.big{font-size:64px;font-weight:300;line-height:1}.big sup{font-size:24px;vertical-align:top}
+.tbtn{width:56px;height:56px;border-radius:50%;font-size:28px;padding:0}
+.power{width:64px;height:64px;border-radius:50%;font-size:26px;padding:0}
+.power.on{background:#22c55e;color:#fff}
+.tog{display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-bottom:1px solid var(--line)}
+.tog:last-child{border:0}
+.sw{position:relative;width:51px;height:31px;flex:none}.sw input{display:none}
+.sw span{position:absolute;inset:0;background:#d1d5db;border-radius:31px;transition:.2s}
+.sw span:before{content:"";position:absolute;width:27px;height:27px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw input:checked+span{background:#22c55e}.sw input:checked+span:before{transform:translateX(20px)}
+select,input[type=time],input[type=number],input[type=text],input[type=password]{font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:5}
+nav button{background:none;display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--mute);padding:4px 8px}
+nav button .ic{font-size:22px}nav button.on{color:var(--acc)}
+.page{display:none}.page.on{display:block}
+.logi{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.logi:last-child{border:0}
+.days{display:flex;gap:4px}.days button{padding:6px 0;width:36px;font-size:13px}.days button.on{background:var(--acc);color:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:9;max-width:90%}
+.toast.show{opacity:1}
+#login{max-width:380px;margin:12vh auto;padding:0 16px}
+.stat{text-align:center}.stat b{display:block;font-size:22px}
+.siri{margin:8px 0 12px;padding-left:20px}.siri li{margin:4px 0}
+.seg{display:flex;background:var(--chip);border-radius:10px;padding:3px}.seg button{flex:1;padding:6px;background:none;font-size:13px}.seg button.on{background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+</style>
+</head>
+<body>
+<div id="login" style="display:none">
+  <h1>❄️ AC Remote</h1>
+  <p class="mute" id="loginMsg">Sign in with your household passcode.</p>
+  <div class="card">
+    <label class="mute small">Your name (shows in the activity log)</label>
+    <input id="lname" type="text" placeholder="e.g. Sam" autocomplete="name">
+    <div style="height:10px"></div>
+    <label class="mute small" id="lpcLabel">Household passcode</label>
+    <input id="lpc" type="password" placeholder="••••" autocomplete="current-password">
+    <div style="height:14px"></div>
+    <button class="pri" style="width:100%" id="lbtn">Sign in</button>
+    <p class="small" style="color:var(--bad)" id="lerr"></p>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<main>
+  <!-- HOME -->
+  <section class="page on" id="p-home">
+    <div class="row between">
+      <div><h1 id="acName">AC</h1><div class="status"><span class="dot" id="dot"></span><span id="conn">Connecting…</span></div></div>
+      <button class="power" id="powerBtn" aria-label="Power">⏻</button>
+    </div>
+    <div id="banner"></div>
+    <div class="card">
+      <div class="dial">
+        <svg viewBox="0 0 240 240"><circle cx="120" cy="120" r="104" fill="none" stroke="var(--line)" stroke-width="14" stroke-dasharray="490 654" transform="rotate(135 120 120)" stroke-linecap="round"/>
+        <circle id="arc" cx="120" cy="120" r="104" fill="none" stroke="var(--cool)" stroke-width="14" stroke-dasharray="0 654" transform="rotate(135 120 120)" stroke-linecap="round"/></svg>
+        <div class="mid"><div class="mute small" id="modeLbl">Cool</div><div class="big"><span id="tgt">--</span><sup id="unit">°C</sup></div><div class="mute small">Room <b id="room">--</b></div><div class="mute small" id="outWrap" hidden>Outside <b id="out">--</b></div></div>
+      </div>
+      <div class="row" style="justify-content:center;gap:40px;margin-top:-8px">
+        <button class="tbtn" id="minus">−</button><button class="tbtn" id="plus">+</button>
+      </div>
+    </div>
+    <h2>Mode</h2>
+    <div class="chips" id="modes"></div>
+    <h2>Fan speed</h2>
+    <div class="card fanbox">
+      <input type="range" id="fanSlider" min="1" max="5" step="1" value="3" aria-label="Fan speed">
+      <div class="fanlbls" id="fanLbls"></div>
+      <div class="fanbtns"><button class="chip" id="fanTurbo"><span class="ic">🚀</span>Turbo</button><button class="chip" id="fanAuto"><span class="ic">🔄</span>Auto</button></div>
+    </div>
+    <h2>Scenes</h2>
+    <div class="chips" id="scenes"></div>
+    <h2>Quick</h2>
+    <div class="chips" id="quick"></div>
+    <h2>Timer</h2>
+    <div class="card" id="timerCard"></div>
+  </section>
+
+  <!-- SCHEDULES -->
+  <section class="page" id="p-sched">
+    <h1>Schedules</h1><p class="mute">Run automatically on the days and times you pick. Both phones see the same list.</p>
+    <div id="schedList"></div>
+    <button class="pri" style="width:100%" id="addSched">+ Add schedule</button>
+  </section>
+
+  <!-- AUTOMATIONS -->
+  <section class="page" id="p-auto">
+    <h1>Automations</h1>
+    <div class="card" id="guardCard"></div>
+    <div class="card" id="maxCard"></div>
+    <h2>Edit scenes</h2>
+    <div id="sceneEdit"></div>
+    <button style="width:100%" id="saveCurScene">+ Save current settings as a scene</button>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="page" id="p-hist">
+    <h1>History</h1>
+    <div class="card"><div class="grid2" id="stats"></div></div>
+    <div class="card">
+      <div class="seg" id="range"><button data-h="6">6 h</button><button data-h="24" class="on">24 h</button><button data-h="72">3 d</button><button data-h="168">7 d</button></div>
+      <svg id="chart" viewBox="0 0 340 180" style="width:100%;margin-top:10px"></svg>
+      <div class="row small mute" style="justify-content:center;gap:14px"><span>━ <span style="color:var(--heat)">Room</span></span><span>┅ <span style="color:var(--acc)">Set</span></span><span>━ <span style="color:var(--dry)">Outside</span></span><span><span style="color:#22c55e">▮</span> Running</span></div>
+    </div>
+    <h2>Activity</h2>
+    <div class="card" id="log"></div>
+  </section>
+
+  <!-- MORE -->
+  <section class="page" id="p-more">
+    <h1>More controls</h1>
+    <h2>Air direction</h2>
+    <div class="card">
+      <label class="mute small">Up / down vanes</label><select id="vswing"></select>
+      <div style="height:10px"></div>
+      <label class="mute small">Left / right vanes</label><select id="hswing"></select>
+    </div>
+    <h2>Features</h2>
+    <div class="card" id="features"></div>
+    <h2>Display</h2>
+    <div class="card"><div class="row between"><span>Temperature units</span><div class="seg" style="width:120px" id="units"><button data-u="C">°C</button><button data-u="F">°F</button></div></div></div>
+    <h2>Siri</h2>
+    <div class="card small">
+      <div>Say <b>“Hey Siri, turn on the AC”</b> or <b>“Hey Siri, turn off the AC”</b>. Works on the home Wi-Fi, like this app. Set it up once on each iPhone:</div>
+      <ol class="siri">
+        <li>Tap <b>Copy “on” link</b> below.</li>
+        <li>Open the <b>Shortcuts</b> app, tap <b>+</b>, search for <b>Get Contents of URL</b> and tap it.</li>
+        <li>Tap <b>URL</b> and paste the link.</li>
+        <li>Tap the name at the top, rename it <b>Turn on the AC</b>, then tap <b>Done</b>.</li>
+        <li>Do the same with <b>Copy “off” link</b> and name it <b>Turn off the AC</b>.</li>
+        <li>Tap each new shortcut once to test it. If your iPhone asks, tap <b>Allow</b> or <b>Always Allow</b>.</li>
+      </ol>
+      <div class="grid2"><button id="siriOn">Copy “on” link</button><button id="siriOff">Copy “off” link</button></div>
+    </div>
+    <h2>Connection</h2>
+    <div class="card small" id="info"></div>
+    <div class="row" style="gap:8px"><button id="reconnect" style="flex:1">Reconnect to AC</button><button id="logout" class="danger" style="flex:1">Sign out</button></div>
+    <p class="mute small" style="text-align:center;margin-top:18px">Tip: in Safari tap Share → <b>Add to Home Screen</b> to use this like an app.</p>
+  </section>
+</main>
+<nav id="nav">
+  <button data-p="home" class="on"><span class="ic">🏠</span>Home</button>
+  <button data-p="sched"><span class="ic">🗓️</span>Schedules</button>
+  <button data-p="auto"><span class="ic">🤖</span>Automate</button>
+  <button data-p="hist"><span class="ic">📈</span>History</button>
+  <button data-p="more"><span class="ic">⚙️</span>More</button>
+</nav>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s), esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ALL_MODES=[["auto","Auto","🔄"],["cool","Cool","❄️"],["dry","Dry","💧"],["fan","Fan","🌀"],["heat","Heat","🔥"]];
+// Modes offered in the app, in this order. Dry and Fan stay available on the AC's own remote,
+// and the mode label (ALL_MODES) still names them if someone uses them.
+const MODES=["cool","auto","heat"].map(k=>ALL_MODES.find(m=>m[0]===k));
+const FANS=[["auto","Auto"],["low","Low"],["medium_low","Med-Low"],["medium","Med"],["medium_high","Med-Hi"],["high","High"]];
+const QUICK=[["quiet","Quiet","🤫"],["sleep","Sleep","🌙"],["light","Display","💡"]];
+const FEATURES=[["xfan","X-Fan","Keeps the fan running briefly after turning off to dry the coil (prevents mould smell). Cool/Dry only."],
+ ["anion","Health / ionizer","Turns on the air ionizer, if your unit has one."],["fresh_air","Fresh air","Draws in outside air, if your unit supports it."],
+ ["power_save","Energy saver","Limits the compressor to save power (cool mode)."],["steady_heat","8° heat (freeze guard)","Holds the room at about 8°C/46°F while you're away in winter."]];
+const VS=[["default","Default"],["full","Swing (full)"],["fixed_top","Fixed: top"],["fixed_upper_mid","Fixed: upper-middle"],["fixed_mid","Fixed: middle"],["fixed_lower_mid","Fixed: lower-middle"],["fixed_bottom","Fixed: bottom"],["swing_top","Swing: top"],["swing_upper_mid","Swing: upper-middle"],["swing_mid","Swing: middle"],["swing_lower_mid","Swing: lower-middle"],["swing_bottom","Swing: bottom"]];
+const HS=[["default","Default"],["full","Swing (full)"],["left","Fixed: left"],["left_center","Fixed: left-centre"],["center","Fixed: centre"],["right_center","Fixed: right-centre"],["right","Fixed: right"]];
+const DAYS=["M","T","W","T","F","S","S"];
+let S=null, pendingTarget=null, tTimer=null, histHours=24, me=null;
+
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2600)}
+async function api(path,body){
+  const r=await fetch(path,body===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(r.status===401){showLogin();throw new Error("auth")}
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok){toast(j.error||"Something went wrong");throw new Error(j.error)}
+  return j;
+}
+const set=ch=>api("/api/set",ch).catch(()=>{});
+
+// ---------- auth ----------
+let setupMode=false;
+async function boot(){
+  const s=await (await fetch("/api/session")).json();
+  if(s.name){me=s.name;showApp()}else{setupMode=s.setup_needed;showLogin()}
+}
+function showLogin(){
+  $("#app").style.display="none";$("#login").style.display="block";
+  if(setupMode){$("#loginMsg").textContent="First time here — create a household passcode. Share it with your household so everyone can sign in on their own phone.";$("#lpcLabel").textContent="New household passcode (4+ characters)";$("#lbtn").textContent="Create & sign in"}
+}
+$("#lbtn").onclick=async()=>{
+  $("#lerr").textContent="";
+  const r=await fetch(setupMode?"/api/setup":"/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:$("#lname").value,passcode:$("#lpc").value})});
+  const j=await r.json();if(!r.ok){$("#lerr").textContent=j.error;return}
+  me=j.name;showApp();
+};
+function showApp(){$("#login").style.display="none";$("#app").style.display="block";listen();api("/api/siri").then(j=>siriKey=j.key).catch(()=>{})}
+
+// ---------- live updates ----------
+let es;
+function listen(){
+  if(es)es.close();
+  es=new EventSource("/api/events");
+  es.onmessage=e=>{S=JSON.parse(e.data);render()};
+  es.onerror=()=>{$("#conn").textContent="Reconnecting to server…";$("#dot").className="dot bad"};
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&me)listen()});
+
+// ---------- render ----------
+function chip(on,label,ic,fn){const b=document.createElement("button");b.className="chip"+(on?" on":"");b.innerHTML=(ic?`<span class="ic">${ic}</span>`:"")+esc(label);b.onclick=fn;return b}
+function render(){
+  const a=S.ac||{}, ok=S.connected;
+  $("#acName").textContent=S.simulated?"AC (simulated)":(S.info?.name&&!/^[0-9a-f]{12}$/i.test(S.info.name)?S.info.name:"Living room AC");
+  $("#dot").className="dot "+(ok?"ok":"bad");
+  $("#conn").textContent=ok?(a.power?`Running · ${a.mode}`:"Off")+(S.stats.on_since&&a.power?` · ${dur(Date.now()/1000-S.stats.on_since)}`:""):"AC offline";
+  $("#banner").innerHTML=!ok?`<div class="banner">⚠️ ${esc(S.error||"Can't reach the AC right now. The server will keep retrying.")}</div>`:"";
+  $("#powerBtn").className="power"+(a.power?" on":"");
+  const col={cool:"--cool",heat:"--heat",dry:"--dry",fan:"--fan",auto:"--auto"}[a.mode]||"--cool";
+  const t=pendingTarget??a.target, F=a.units==="F", lo=F?61:16, hi=F?86:30;
+  $("#tgt").textContent=a.mode==="fan"?"Fan":(t??"--");$("#unit").textContent=a.mode==="fan"?"":"°"+(a.units||"C");
+  $("#room").textContent=a.room!=null?a.room+"°":"--";
+  const o=S.outside;$("#outWrap").hidden=!o;if(o){$("#out").textContent=o.temp+"°";$("#outWrap").title=o.place?"Weather for "+o.place:""}
+  $("#modeLbl").textContent=(ALL_MODES.find(m=>m[0]===a.mode)||[,"—"])[1]+(a.power?"":" · off");
+  const frac=t?Math.max(0,Math.min(1,(t-lo)/(hi-lo))):0;
+  $("#arc").setAttribute("stroke-dasharray",`${(a.power?490*frac:0).toFixed(0)} 654`);$("#arc").style.stroke=`var(${col})`;$("#arc").style.opacity=a.power?1:0;
+  const m=$("#modes");m.innerHTML="";MODES.forEach(([k,l,i])=>m.append(chip(a.mode===k,l,i,()=>set({mode:k,power:true}))));
+  const fk=pendingFan??a.fan, fi=FAN_SPEEDS.findIndex(f=>f[0]===fk);
+  if(!fanDrag){if(fi>=0)$("#fanSlider").value=fi+1;paintFan(+$("#fanSlider").value,fi<0)}
+  $("#fanTurbo").classList.toggle("on",!!a.turbo);
+  const q=$("#quick");q.innerHTML="";QUICK.forEach(([k,l,i])=>q.append(chip(a[k],l,i,()=>set({[k]:!a[k]}))));
+  const sc=$("#scenes");sc.innerHTML="";S.scenes.forEach(s=>sc.append(chip(false,s.name,s.icon,()=>api("/api/scene/"+s.id,{}).then(()=>toast(s.name+" ✓")).catch(()=>{}))));
+  renderTimer();renderSched();renderAuto();renderHist();renderMore();
+}
+function dur(s){s=Math.max(0,s|0);const h=s/3600|0,m=(s%3600)/60|0;return h?`${h}h ${m}m`:`${m}m`}
+
+function renderTimer(){
+  const t=S.timer,c=$("#timerCard");
+  if(t){c.innerHTML=`<div class="row between"><div>⏱️ Turning <b>${t.action}</b> in <b>${dur(t.at-Date.now()/1000)}</b><div class="mute small">Set by ${esc(t.by)}</div></div><button class="danger" id="tcancel">Cancel</button></div>`;$("#tcancel").onclick=()=>api("/api/timer",{cancel:true});return}
+  const act=S.ac?.power?"off":"on";
+  c.innerHTML=`<div class="mute small" style="margin-bottom:8px">Turn <b>${act}</b> after…</div><div class="chips">${[15,30,60,120,240,480].map(m=>`<button class="chip" data-m="${m}">${m<60?m+" min":m/60+" h"}</button>`).join("")}</div>`;
+  c.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>api("/api/timer",{minutes:+b.dataset.m,action:act}).then(()=>toast("Timer set")));
+}
+setInterval(()=>{if(S?.timer)renderTimer()},20000);
+
+// temperature with debounce so tapping + three times sends one command
+function bump(d){if(!S?.ac)return;const F=S.ac.units==="F",lo=F?61:16,hi=F?86:30;pendingTarget=Math.max(lo,Math.min(hi,(pendingTarget??S.ac.target)+d));render();clearTimeout(tTimer);tTimer=setTimeout(async()=>{const v=pendingTarget;await set({target:v});pendingTarget=null},700)}
+$("#plus").onclick=()=>bump(1);$("#minus").onclick=()=>bump(-1);
+
+// fan speed: a slider for the five speeds, with Auto as its own button underneath.
+// The command is sent when the slider is released, not while dragging.
+const FAN_SPEEDS=FANS.filter(f=>f[0]!=="auto");
+let pendingFan=null, fanDrag=false;
+const fanPos=i=>`calc(14px + ${i} * (100% - 28px) / 4)`;  // centre of stop i (thumb is 28px wide)
+function paintFan(v,auto){
+  const fs=$("#fanSlider");
+  fs.classList.toggle("auto",auto);
+  fs.style.setProperty("--p",auto?"0%":fanPos(v-1));
+  fs.setAttribute("aria-valuetext",auto?"Auto":FAN_SPEEDS[v-1][1]);
+  $("#fanLbls").querySelectorAll("span").forEach((s,i)=>s.classList.toggle("on",!auto&&i===v-1));
+  $("#fanAuto").classList.toggle("on",auto);
+}
+function setFan(k){pendingFan=k;render();set({fan:k}).finally(()=>{pendingFan=null})}
+$("#fanLbls").innerHTML=FAN_SPEEDS.map(([,l],i)=>`<span data-i="${i}" style="left:${fanPos(i)}">${l}</span>`).join("");
+$("#fanLbls").querySelectorAll("span").forEach(s=>s.onclick=()=>setFan(FAN_SPEEDS[+s.dataset.i][0]));
+$("#fanSlider").oninput=e=>{fanDrag=true;paintFan(+e.target.value,false)};
+$("#fanSlider").onchange=e=>{fanDrag=false;setFan(FAN_SPEEDS[+e.target.value-1][0])};
+$("#fanAuto").onclick=()=>setFan("auto");
+$("#fanTurbo").onclick=()=>set({turbo:!S.ac?.turbo});
+$("#powerBtn").onclick=()=>set({power:!S.ac?.power});
+
+// ---------- schedules ----------
+let schedDraft=null;
+function settingsSummary(s){return [s.mode,s.target!=null?s.target+"°":"",s.fan&&s.fan!=="auto"?"fan "+s.fan.replace("_"," "):""].filter(Boolean).join(" · ")}
+function renderSched(){
+  if(schedDraft)return; const L=$("#schedList");
+  L.innerHTML=S.schedules.length?"":`<div class="card mute">No schedules yet. Example: turn on Cool at 22° on weekdays at 5:00 PM, so it's cool when you get home.</div>`;
+  S.schedules.forEach((s,i)=>{const d=document.createElement("div");d.className="card";
+    d.innerHTML=`<div class="row between"><div><b style="font-size:22px">${fmt12(s.time)}</b> <span class="mute">${esc(s.name)}</span><div class="small mute">${s.days.map(x=>"MTWTFSS"[x]).join(" ")||"No days"} · ${s.action==="off"?"Turn off":"Turn on · "+esc(settingsSummary(s.settings))}</div></div>
+    <label class="sw"><input type="checkbox" ${s.enabled?"checked":""}><span></span></label></div><div class="row" style="gap:8px;margin-top:10px"><button class="small" data-e>Edit</button><button class="small danger" data-d>Delete</button></div>`;
+    d.querySelector("input").onchange=e=>{const a=clone(S.schedules);a[i].enabled=e.target.checked;saveSched(a)};
+    d.querySelector("[data-e]").onclick=()=>editSched(i);
+    d.querySelector("[data-d]").onclick=()=>{if(confirm("Delete this schedule?")){const a=clone(S.schedules);a.splice(i,1);saveSched(a)}};
+    L.append(d)});
+}
+function fmt12(t){let[h,m]=t.split(":").map(Number);return`${(h%12)||12}:${String(m).padStart(2,"0")} ${h<12?"AM":"PM"}`}
+const clone=o=>JSON.parse(JSON.stringify(o));
+function saveSched(a){return api("/api/schedules",{schedules:a}).then(()=>toast("Saved"))}
+$("#addSched").onclick=()=>editSched(-1);
+function editSched(i){
+  schedDraft=i>=0?clone(S.schedules[i]):{name:"",enabled:true,time:"17:00",days:[0,1,2,3,4],action:"on",settings:{mode:"cool",target:22,fan:"auto"}};
+  const s=schedDraft,L=$("#schedList");
+  L.innerHTML=`<div class="card"><label class="mute small">Name</label><input type="text" id="sn" value="${esc(s.name)}" placeholder="e.g. Before we get home">
+  <div style="height:10px"></div><div class="grid2"><div><label class="mute small">Time</label><input type="time" id="st" value="${s.time}"></div>
+  <div><label class="mute small">Action</label><select id="sa"><option value="on">Turn on</option><option value="off">Turn off</option></select></div></div>
+  <div style="height:10px"></div><label class="mute small">Days</label><div class="days" id="sd">${DAYS.map((d,k)=>`<button data-k="${k}" class="${s.days.includes(k)?"on":""}">${d}</button>`).join("")}</div>
+  <div id="sonly"><div style="height:10px"></div><div class="grid2"><div><label class="mute small">Mode</label><select id="sm">${MODES.map(m=>`<option value="${m[0]}">${m[1]}</option>`).join("")}</select></div>
+  <div><label class="mute small">Temperature</label><input type="number" id="stt" value="${s.settings.target??22}"></div></div>
+  <div style="height:10px"></div><label class="mute small">Fan</label><select id="sf">${FANS.map(f=>`<option value="${f[0]}">${f[1]}</option>`).join("")}</select></div>
+  <div class="row" style="gap:8px;margin-top:14px"><button class="pri" style="flex:1" id="ss">Save</button><button style="flex:1" id="sc">Cancel</button></div></div>`;
+  $("#sa").value=s.action;$("#sm").value=s.settings.mode||"cool";$("#sf").value=s.settings.fan||"auto";
+  const vis=()=>$("#sonly").style.display=$("#sa").value==="on"?"block":"none";vis();$("#sa").onchange=vis;
+  $("#sd").querySelectorAll("button").forEach(b=>b.onclick=()=>b.classList.toggle("on"));
+  $("#sc").onclick=()=>{schedDraft=null;renderSched()};
+  $("#ss").onclick=()=>{s.name=$("#sn").value;s.time=$("#st").value;s.action=$("#sa").value;
+    s.days=[...$("#sd").querySelectorAll("button.on")].map(b=>+b.dataset.k);
+    s.settings=s.action==="on"?{mode:$("#sm").value,target:+$("#stt").value,fan:$("#sf").value}:{};
+    const a=clone(S.schedules);if(i>=0)a[i]=s;else a.push(s);schedDraft=null;saveSched(a)};
+}
+
+// ---------- automations ----------
+let autoDirty=false;
+function renderAuto(){
+  if(autoDirty)return;const r=S.rules,g=r.guard,m=r.max_runtime,u="°"+(S.ac?.units||"C");
+  $("#guardCard").innerHTML=`<div class="row between"><div><b>🛡️ Comfort guard</b><div class="mute small">If the AC is off and the room gets too hot or too cold, turn it on automatically. Handy for pets or plants while you're away.</div></div><label class="sw"><input type="checkbox" id="ge" ${g.enabled?"checked":""}><span></span></label></div>
+  <div class="grid2" style="margin-top:10px"><div><label class="mute small">Cool if room above (${u})</label><input type="number" id="gmax" value="${g.max_room}"></div><div><label class="mute small">…cool to (${u})</label><input type="number" id="gct" value="${g.cool_target}"></div>
+  <div><label class="mute small">Heat if room below (${u})</label><input type="number" id="gmin" value="${g.min_room}"></div><div><label class="mute small">…heat to (${u})</label><input type="number" id="ght" value="${g.heat_target}"></div></div>`;
+  $("#maxCard").innerHTML=`<div class="row between"><div><b>⏲️ Run-time limit</b><div class="mute small">Turn the AC off if it has been running non-stop longer than this, in case someone forgets.</div></div><label class="sw"><input type="checkbox" id="me" ${m.enabled?"checked":""}><span></span></label></div>
+  <div style="margin-top:10px"><label class="mute small">Hours</label><input type="number" id="mh" value="${m.hours}" step="0.5"></div>
+  <button class="pri" style="width:100%;margin-top:12px" id="saveRules">Save automations</button>`;
+  ["#ge","#gmax","#gct","#gmin","#ght","#me","#mh"].forEach(id=>$(id).oninput=()=>autoDirty=true);
+  $("#saveRules").onclick=()=>{api("/api/rules",{guard:{enabled:$("#ge").checked,max_room:+$("#gmax").value,min_room:+$("#gmin").value,cool_target:+$("#gct").value,heat_target:+$("#ght").value},max_runtime:{enabled:$("#me").checked,hours:+$("#mh").value}}).then(()=>{autoDirty=false;toast("Saved")})};
+  const E=$("#sceneEdit");E.innerHTML="";
+  S.scenes.forEach((s,i)=>{const d=document.createElement("div");d.className="card row between";d.innerHTML=`<div>${esc(s.icon)} <b>${esc(s.name)}</b><div class="mute small">${esc(settingsSummary(s.settings))}</div></div><button class="small danger">Delete</button>`;
+    d.querySelector("button").onclick=()=>{if(confirm("Delete scene "+s.name+"?")){const a=clone(S.scenes);a.splice(i,1);api("/api/scenes",{scenes:a})}};E.append(d)});
+}
+$("#saveCurScene").onclick=()=>{const a=S.ac;if(!a)return;const name=prompt("Name for this scene?");if(!name)return;
+  const keep=["power","mode","target","fan","turbo","quiet","sleep","light","vswing","hswing","power_save"];
+  const settings=Object.fromEntries(keep.filter(k=>a[k]!=null).map(k=>[k,a[k]]));
+  api("/api/scenes",{scenes:[...S.scenes,{name,icon:"⭐",settings}]}).then(()=>toast("Scene saved"))};
+
+// ---------- history ----------
+let histCache=null,histAt=0;
+async function renderHist(force){
+  const st=S.stats,u="°"+(S.ac?.units||"C");
+  $("#stats").innerHTML=`<div class="stat"><b>${st.on_hours_today} h</b><span class="mute small">Running today</span></div><div class="stat"><b>${st.on_hours_week} h</b><span class="mute small">Last 7 days</span></div>
+  <div class="stat"><b>${st.room_min_24h??"--"}${u}</b><span class="mute small">Coolest (24 h)</span></div><div class="stat"><b>${st.room_max_24h??"--"}${u}</b><span class="mute small">Warmest (24 h)</span></div>`;
+  $("#log").innerHTML=S.log.length?S.log.map(l=>`<div class="logi"><b>${esc(l.who)}</b> · ${esc(l.text)}<div class="mute small">${new Date(l.t*1000).toLocaleString([], {weekday:"short",hour:"numeric",minute:"2-digit"})}</div></div>`).join(""):`<span class="mute">Nothing yet.</span>`;
+  if(!$("#p-hist").classList.contains("on"))return;
+  if(force||Date.now()-histAt>60000){histCache=await api("/api/history?hours="+histHours);histAt=Date.now()}
+  drawChart(histCache||[]);
+}
+function drawChart(h){
+  const W=340,H=180,P=28,svg=$("#chart");
+  if(h.length<2){svg.innerHTML=`<text x="170" y="90" text-anchor="middle" fill="var(--mute)" font-size="13">Collecting data — check back in a few minutes</text>`;return}
+  const t0=h[0].t,t1=h[h.length-1].t,vals=h.flatMap(x=>[x.room,x.target,x.out]).filter(v=>v!=null);
+  let lo=Math.floor(Math.min(...vals))-1,hi=Math.ceil(Math.max(...vals))+1;
+  const X=t=>P+(t-t0)/(t1-t0||1)*(W-P-6),Y=v=>8+(hi-v)/(hi-lo)*(H-36);
+  let bars="";h.forEach((p,i)=>{if(p.on){const nx=h[i+1]?X(h[i+1].t):X(p.t)+1;bars+=`<rect x="${X(p.t)}" y="${H-24}" width="${Math.max(1,nx-X(p.t))}" height="6" fill="#22c55e"/>`}});
+  const line=(k)=>h.filter(p=>p[k]!=null).map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p[k]).toFixed(1)).join(" ");
+  let grid="";for(let v=lo;v<=hi;v+=Math.max(1,Math.round((hi-lo)/4))){grid+=`<line x1="${P}" x2="${W}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${P-4}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="var(--mute)">${v}°</text>`}
+  const lbl=t=>new Date(t*1000).toLocaleString([],histHours>24?{weekday:"short"}:{hour:"numeric"});
+  svg.innerHTML=grid+`<path d="${line("out")}" fill="none" stroke="var(--dry)" stroke-width="1.5"/><path d="${line("target")}" fill="none" stroke="var(--acc)" stroke-width="1.5" stroke-dasharray="4 3"/><path d="${line("room")}" fill="none" stroke="var(--heat)" stroke-width="2"/>`+bars+
+   `<text x="${P}" y="${H-4}" font-size="10" fill="var(--mute)">${lbl(t0)}</text><text x="${W}" y="${H-4}" font-size="10" fill="var(--mute)" text-anchor="end">${lbl(t1)}</text>`;
+}
+$("#range").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("#range").querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");histHours=+b.dataset.h;renderHist(true)});
+
+// ---------- more ----------
+function renderMore(){
+  const a=S.ac||{};
+  const vs=$("#vswing"),hs=$("#hswing");
+  if(!vs.options.length){vs.innerHTML=VS.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join("");hs.innerHTML=HS.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join("");
+    vs.onchange=()=>set({vswing:vs.value});hs.onchange=()=>set({hswing:hs.value})}
+  if(document.activeElement!==vs)vs.value=a.vswing||"default";if(document.activeElement!==hs)hs.value=a.hswing||"default";
+  $("#features").innerHTML=FEATURES.map(([k,l,d])=>`<div class="tog"><div style="padding-right:10px"><div>${l}</div><div class="mute small">${d}</div></div><label class="sw"><input type="checkbox" data-k="${k}" ${a[k]?"checked":""}><span></span></label></div>`).join("");
+  $("#features").querySelectorAll("input").forEach(i=>i.onchange=()=>set({[i.dataset.k]:i.checked}));
+  $("#units").querySelectorAll("button").forEach(b=>{b.classList.toggle("on",b.dataset.u===(a.units||"C"));b.onclick=()=>set({units:b.dataset.u})});
+  const i=S.info||{};
+  $("#info").innerHTML=`Signed in as <b>${esc(me)}</b><br>Status: ${S.connected?"✅ Connected":"❌ Offline"}${S.last_seen?` · last heard ${new Date(S.last_seen*1000).toLocaleTimeString()}`:""}<br>AC address: ${esc(i.ip||"—")} · ${esc(i.mac||"")}<br>${i.model?"Model: "+esc(i.model)+" · ":""}${i.version?"Firmware: "+esc(i.version):""}`;
+}
+// ---------- Siri links ----------
+// The key is fetched at sign-in so the copy happens right in the tap (Safari only allows copying then).
+// The page isn't https, so navigator.clipboard doesn't exist on the phones; select-and-copy does.
+let siriKey=null;
+function copyText(t){
+  const ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");
+  ta.style.cssText="position:fixed;top:0;left:-9999px;font-size:12pt;border:0;padding:0;margin:0";
+  document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,t.length);
+  let ok=false;try{ok=document.execCommand("copy")}catch(e){}
+  ta.remove();return ok;
+}
+[["on","#siriOn"],["off","#siriOff"]].forEach(([a,id])=>$(id).onclick=()=>{
+  if(!siriKey){toast("Still loading, try again in a second");api("/api/siri").then(j=>siriKey=j.key).catch(()=>{});return}
+  const u=`${location.origin}/siri/${a}?key=${encodeURIComponent(siriKey)}&by=${encodeURIComponent(me||"")}`;
+  if(copyText(u))toast(`Copied the “${a}” link. Now paste it in Shortcuts.`);else prompt("Copy this link:",u);
+});
+$("#reconnect").onclick=()=>api("/api/reconnect",{}).then(()=>toast("Reconnecting…"));
+$("#logout").onclick=()=>api("/api/logout",{}).then(()=>{me=null;es&&es.close();setupMode=false;showLogin()});
+
+// ---------- nav ----------
+$("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  $("#nav").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("on",p.id==="p-"+b.dataset.p));
+  if(b.dataset.p==="hist")renderHist(true);window.scrollTo(0,0)});
+boot();
+</script>
+</body>
+</html>
